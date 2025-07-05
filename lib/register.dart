@@ -42,8 +42,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   'name': nameCtrl.text,
                   'age': int.tryParse(ageCtrl.text) ?? 0,
                   'gender': genderCtrl.text,
+                   'phone': phoneCtrl.text,
                   'address': {
-                    'phone': phoneCtrl.text,
+                   
                     'address': addressCtrl.text
                   }
                 };

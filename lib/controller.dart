@@ -1,34 +1,39 @@
+import 'dart:convert';
+
 import 'package:get/get.dart';
-import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-class PatientController extends GetxController {
-  final name = ''.obs;
-  final age = ''.obs;
-  final gender = 'Male'.obs;
-  final contact = ''.obs;
+class ApiController extends GetxController {
+  final String baseUrl = 'http://192.168.1.40:8000/clinic';
 
-  final formKey = GlobalKey<FormState>();
+  var searchResults = [].obs;
+  var loading = false.obs;
 
-  void register() {
-    if (formKey.currentState!.validate()) {
-      Get.dialog(
-        AlertDialog(
-          title: const Text('Success'),
-          content: Text(
-            'Patient Registered:\n'
-            'Name: ${name.value}\n'
-            'Age: ${age.value}\n'
-            'Gender: ${gender.value}\n'
-            'Contact: ${contact.value}',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
+  Future<void> searchPatient(String query) async {
+    loading.value = true;
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/search/?q=$query'));
+      if (res.statusCode == 200) {
+        searchResults.value = json.decode(res.body);
+      } else {
+        searchResults.value = [];
+      }
+    } catch (e) {
+      searchResults.value = [];
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  Future<void> registerPatient(Map<String, dynamic> data) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/register/'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
       );
+    } catch (e) {
+      rethrow;
     }
   }
 }

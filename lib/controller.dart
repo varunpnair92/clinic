@@ -29,38 +29,51 @@ class ApiController extends GetxController {
   }
 
   Future<void> registerPatient(Map<String, dynamic> data) async {
+  print("registerPatient called with data: $data");
+
   try {
-    print(data);
     final response = await http.post(
       Uri.parse('$baseUrl/register/'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode(data),
     );
 
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
     if (response.statusCode == 201) {
       Get.snackbar(
         'Success',
         'Patient registered successfully',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade600,
+        backgroundColor: Colors.green,
         colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+        
       );
+       await Future.delayed(const Duration(seconds: 1));  // delay here
+  Get.back(); // move back here
     } else {
       Get.snackbar(
         'Failed',
         'Registration failed: ${response.body}',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade600,
+        backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: const Duration(seconds: 3),
       );
+      await Future.delayed(const Duration(seconds: 1));  // delay here
+  Get.back();
     }
   } catch (e) {
+    print('Error during registration: $e');
     Get.snackbar(
       'Error',
-      e.toString(),
+      'Network error: $e',
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.red.shade600,
+      backgroundColor: Colors.red,
       colorText: Colors.white,
+      duration: const Duration(seconds: 3),
     );
   }
 }
@@ -107,8 +120,12 @@ Future<void> updateVisit(int visitId, Map<String, dynamic> data) async {
         if (selectedPatient.value != null) {
           await searchPatient(selectedPatient.value!['name'] ?? '');
         }
+        await Future.delayed(const Duration(seconds: 1));  // delay here
+  Get.back();
       } else {
         Get.snackbar('Error', 'Failed to update visit: ${response.body}');
+        await Future.delayed(const Duration(seconds: 1));  // delay here
+  Get.back();
       }
     } catch (e) {
       Get.snackbar('Error', 'Exception: $e');

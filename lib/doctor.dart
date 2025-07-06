@@ -29,6 +29,7 @@ class DoctorPage extends StatelessWidget {
         children: [
           // Left: Search
           Expanded(
+            flex:1,
             child: Column(
               children: [
                 const SizedBox(height: 20),
@@ -62,6 +63,7 @@ class DoctorPage extends StatelessWidget {
 
           // Middle: Patient Info
           Expanded(
+            flex:1,
             child: Obx(() {
               final patient = api.selectedPatient.value;
               if (patient == null) return const Center(child: Text("No Patient Selected"));
@@ -89,11 +91,19 @@ class DoctorPage extends StatelessWidget {
 
           // Right: Visit History + Add Visit
           Expanded(
+            flex:3,
             child: Obx(() {
               final patient = api.selectedPatient.value;
               if (patient == null) return const SizedBox();
 
               final visits = patient['visits'] ?? [];
+
+              final allVisitText = visits.map((visit) {
+                final prescriptions = visit['prescriptions'] ?? [];
+                final reason = visit['reason'] ?? '';
+                final prescriptionText = prescriptions.map((p) => '💊 **${p['medicine_name']}** - ${p['instructions']}').join("\n");
+                return '$reason\n$prescriptionText';
+              }).join("\n\n");
 
               return Padding(
                 padding: const EdgeInsets.all(16),
@@ -106,38 +116,18 @@ class DoctorPage extends StatelessWidget {
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Expanded(
-                      child: ListView.separated(
-                        itemCount: visits.length,
-                        separatorBuilder: (_, __) => const Divider(color: Colors.grey),
-                        itemBuilder: (_, i) {
-                          final visit = visits[i];
-                          final prescriptions = visit['prescriptions'] ?? [];
-                          return Container(
-                            color: i % 2 == 0 ? Colors.teal.shade50 : Colors.orange.shade50,
-                            padding: const EdgeInsets.all(8),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text("Date: ${visit['visit_date'] ?? 'N/A'}"),
-                                      Text("Reason: ${visit['reason'] ?? 'N/A'}"),
-                                      ...prescriptions.map<Widget>((p) => Text("💊 ${p['medicine_name']} - ${p['instructions']}")).toList(),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () {
-                                    Get.to(() => EditVisitPage(visitData: visit));
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: SingleChildScrollView(
+                          child: Text(
+                            allVisitText,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ),
                       ),
                     ),
                     const Divider(),
@@ -148,6 +138,8 @@ class DoctorPage extends StatelessWidget {
                     TextField(
                       controller: prescriptionController,
                       decoration: const InputDecoration(labelText: 'Prescription'),
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
                     ),
                     ElevatedButton(
                       onPressed: () async {

@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 class ApiController extends GetxController {
-  final String baseUrl = 'http://192.168.1.40:8000/clinic';
+  final String baseUrl = 'http://172.16.111.111:8000/clinic';
     var selectedPatient = Rxn<Map>();  // <-- This line is essential
 
 
@@ -60,18 +60,48 @@ Future<bool> loginUser(String username, String password) async {
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');
 
+    final responseData = json.decode(response.body);
+
     if (response.statusCode == 201) {
+      final opNumber = responseData['op_number'] ?? 'N/A';
+
       Get.snackbar(
         'Success',
         'Patient registered successfully',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-        
+        duration: const Duration(seconds: 2),
       );
-       await Future.delayed(const Duration(seconds: 1));  // delay here
-  Get.back(); // move back here
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      Get.defaultDialog(
+        title: 'OP Number',
+        content: Text('New OP Number: $opNumber'),
+        textConfirm: 'OK',
+        onConfirm: () => Get.back(), // close dialog
+      );
+    } else if (response.statusCode == 400) {
+      final opNumber = responseData['existing_op_number'] ?? 'N/A';
+
+      Get.snackbar(
+        'Already Registered',
+        'Patient exists',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      Get.defaultDialog(
+        title: 'Patient Exists',
+        content: Text('Existing OP Number: $opNumber'),
+        textConfirm: 'OK',
+        onConfirm: () => Get.back(), // close dialog
+      );
     } else {
       Get.snackbar(
         'Failed',
@@ -81,8 +111,6 @@ Future<bool> loginUser(String username, String password) async {
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
-      await Future.delayed(const Duration(seconds: 1));  // delay here
-  Get.back();
     }
   } catch (e) {
     print('Error during registration: $e');

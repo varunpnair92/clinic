@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
 import 'controller.dart';
-import 'edit_visit.dart';
 
 class DoctorPage extends StatelessWidget {
   const DoctorPage({super.key});
@@ -12,6 +13,8 @@ class DoctorPage extends StatelessWidget {
     final queryController = TextEditingController();
     final remarksController = TextEditingController();
     final prescriptionController = TextEditingController();
+    final xrayBytes = Rx<Uint8List?>(null);
+    final xrayName = RxString('');
 
     return Scaffold(
       drawer: Drawer(
@@ -116,14 +119,6 @@ class DoctorPage extends StatelessWidget {
                 if (patient == null) return const SizedBox();
 
                 final visits = patient['visits'] ?? [];
-                final allVisitText = visits.map((visit) {
-                  final prescriptions = visit['prescriptions'] ?? [];
-                  final reason = visit['reason'] ?? '';
-                  final prescriptionText = prescriptions
-                      .map((p) => '💊 ${p['medicine_name']} - ${p['instructions']}')
-                      .join("\n");
-                  return '$reason\n$prescriptionText';
-                }).join("\n\n");
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,24 +129,55 @@ class DoctorPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          border: Border.all(color: Colors.grey.shade400),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: SingleChildScrollView(
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: Text(
-                              allVisitText,
-                              textAlign: TextAlign.left,
-                              style: const TextStyle(fontSize: 14),
+                      child: ListView.builder(
+                        itemCount: visits.length,
+                        itemBuilder: (_, index) {
+                          final visit = visits[index];
+                          final reason = visit['reason'] ?? '';
+                          final prescriptions = visit['prescriptions'] ?? [];
+                          final xrayUrl = visit['xray_image'];
+                          final prescriptionText = prescriptions
+    .map((p) => '💊 ${p['medicine_name']} - ${p['instructions']}')
+    .join("\n");
+
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(reason, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  if (prescriptionText.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(prescriptionText),
+                                  ],
+                                  if (xrayUrl != null) ...[
+                                    const SizedBox(height: 8),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: GestureDetector(
+                                        onTap: () => Get.dialog(
+                                          Dialog(
+                                            child: InteractiveViewer(
+                                              child: Image.network(xrayUrl),
+                                            ),
+                                          ),
+                                        ),
+                                        child: Image.network(
+                                          xrayUrl,
+                                          height: 100,
+                                          width: 100,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ]
+                                ],
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -167,20 +193,47 @@ class DoctorPage extends StatelessWidget {
                       keyboardType: TextInputType.multiline,
                     ),
                     const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: () async {
-                        await api.addVisit(
-                          patientId: patient['id'],
-                          reason: remarksController.text,
-                          prescription: prescriptionController.text,
-                        );
-                        await api.searchPatient(patient['name']);
-                        api.selectedPatient.value = api.searchResults
-                            .firstWhere((p) => p['id'] == patient['id']);
-                        remarksController.clear();
-                        prescriptionController.clear();
-                      },
-                      child: const Text("Add Visit"),
+                    Row(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final result = await FilePicker.platform.pickFiles(type: FileType.image);
+                            if (result != null && result.files.single.bytes != null) {
+                              xrayBytes.value = result.files.single.bytes;
+                              xrayName.value = result.files.single.name;
+                            }
+                          },
+                          icon: const Icon(Icons.upload),
+                          label: const Text("Pick X-Ray"),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final id = patient['id'];
+                            final reason = remarksController.text;
+                            final prescription = prescriptionController.text;
+
+                            final visitId = await api.addVisitWithImage(
+                              patientId: id,
+                              reason: reason,
+                              prescription: prescription,
+                              xrayBytes: xrayBytes.value,
+                              fileName: xrayName.value,
+                            );
+
+                            if (visitId != null) {
+                              await api.searchPatient(patient['name']);
+                              api.selectedPatient.value = api.searchResults
+                                  .firstWhere((p) => p['id'] == patient['id']);
+                              remarksController.clear();
+                              prescriptionController.clear();
+                              xrayBytes.value = null;
+                              xrayName.value = '';
+                            }
+                          },
+                          child: const Text("Add Visit"),
+                        ),
+                      ],
                     ),
                   ],
                 );

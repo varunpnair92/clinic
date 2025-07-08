@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:http_parser/http_parser.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -126,30 +128,95 @@ Future<bool> loginUser(String username, String password) async {
 }
 
 
-Future<void> addVisit({required int patientId, required String reason, String? prescription}) async {
-  final data = {
-    'patient_id': patientId,
-    'reason': reason,
-    'prescriptions': prescription != null && prescription.trim().isNotEmpty
-        ? [
-            {
-              'medicine_name': prescription,
-              'instructions': ''
-            }
-          ]
-        : [],
-  };
+Future<void> addVisit({
+  required int patientId,
+  required String reason,
+  String? prescription,
+  String? xrayFilePath, // optional image path
+}) async {
+  final uri = Uri.parse('$baseUrl/add/');
+
+  final request = http.MultipartRequest('POST', uri);
+  request.fields['patient_id'] = patientId.toString();
+  request.fields['reason'] = reason;
+
+  if (prescription != null && prescription.trim().isNotEmpty) {
+    final prescriptionsJson = jsonEncode([
+      {'medicine_name': prescription, 'instructions': ''}
+    ]);
+    request.fields['prescriptions'] = prescriptionsJson;
+  } else {
+    request.fields['prescriptions'] = jsonEncode([]);
+  }
+
+  if (xrayFilePath != null && xrayFilePath.isNotEmpty) {
+    request.files.add(await http.MultipartFile.fromPath('xray_image', xrayFilePath));
+  }
 
   try {
-    await http.post(
-      Uri.parse('$baseUrl/add/'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(data),
-    );
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 201) {
+      Get.snackbar('Success', 'Visit added');
+    } else {
+      Get.snackbar('Error', 'Failed: ${response.body}');
+    }
   } catch (e) {
-    Get.snackbar('Error', e.toString());
+    Get.snackbar('Error', 'Network error: $e');
   }
 }
+
+
+Future<int?> addVisitWithImage({
+  required int patientId,
+  required String reason,
+  required String prescription,
+  Uint8List? xrayBytes,
+  String? fileName,
+}) async {
+  final uri = Uri.parse('$baseUrl/add/');
+  final request = http.MultipartRequest('POST', uri);
+
+  request.fields['patient_id'] = patientId.toString();
+  request.fields['reason'] = reason;
+  request.fields['prescriptions'] = json.encode([
+    {
+      'medicine_name': prescription,
+      'instructions': ''
+    }
+  ]);
+
+  // ✅ Add file if available
+  if (xrayBytes != null && fileName != null && fileName.isNotEmpty) {
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'xray', // must match Django view
+        xrayBytes,
+        filename: fileName,
+        contentType: MediaType('image', 'jpeg'), // Add `import 'package:http_parser/http_parser.dart';`
+      ),
+    );
+  }
+
+  try {
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 201) {
+      final responseData = json.decode(response.body);
+      return responseData['visit_id'];
+    } else {
+      print('Failed: ${response.body}');
+    }
+  } catch (e) {
+    print('Error: $e');
+  }
+  return null;
+}
+
+
+
+
 
 
 Future<void> updateVisit(int visitId, Map<String, dynamic> data) async {
@@ -178,6 +245,7 @@ Future<void> updateVisit(int visitId, Map<String, dynamic> data) async {
       Get.snackbar('Error', 'Exception: $e');
     }
   }
+
 
 
 

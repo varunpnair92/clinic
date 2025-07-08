@@ -1,7 +1,7 @@
+import 'package:clinic/center_page.dart';
 import 'package:clinic/controller.dart';
 import 'package:clinic/doctor.dart';
 import 'package:clinic/reception_home.dart';
-import 'package:clinic/register.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -13,51 +13,47 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final api = Get.put(ApiController());
 
-    return Scaffold(
-      appBar: AppBar(title: Text("Login"),
-      leading: IconButton(
-    icon: const Icon(Icons.arrow_back),
-    onPressed: () => Get.back(),
-  ),),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: usernameController,
-              decoration: InputDecoration(labelText: "Username"),
-            ),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: InputDecoration(labelText: "Password"),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                final success = await api.loginUser(
-                  usernameController.text,
-                  passwordController.text,
-                );
+    return CenteredPage(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            "Clinic Login",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 24),
+          TextField(
+            controller: usernameController,
+            decoration: const InputDecoration(labelText: "Username"),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: const InputDecoration(labelText: "Password"),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () async {
+              final success = await api.loginUser(
+                usernameController.text,
+                passwordController.text,
+              );
 
-                if (success) {
-                  if (api.loggedInUser['role'] == 'doctor') {
-                    Get.off(() => const DoctorPage());
-                  } else {
-                    Get.off(() => const ReceptionistHomePage()); // You need to make this
-                  }
+              if (success) {
+                if (api.loggedInUser['role'] == 'doctor') {
+                  Get.off(() => const DoctorPage());
                 } else {
-                  Get.snackbar("Error", "Login failed");
+                  Get.off(() => const ReceptionistHomePage());
                 }
-              },
-              child: Text("Login"),
-            )
-          ],
-        ),
+              } else {
+                Get.snackbar("Error", "Login failed");
+              }
+            },
+            child: const Text("Login"),
+          ),
+        ],
       ),
     );
   }
 }
-
-
-

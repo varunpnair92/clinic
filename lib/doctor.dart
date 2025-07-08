@@ -42,10 +42,7 @@ class DoctorPage extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const Text(
-                    'Search',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Search', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   TextField(
                     controller: queryController,
                     decoration: const InputDecoration(labelText: 'Name / Phone / OP'),
@@ -88,10 +85,7 @@ class DoctorPage extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Patient Details',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+                    const Text('Patient Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
                     Text("Name: ${patient['name'] ?? 'N/A'}"),
                     Text("Age: ${patient['age'] ?? 'N/A'}"),
@@ -123,22 +117,20 @@ class DoctorPage extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Visit History',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+                    const Text('Visit History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Expanded(
                       child: ListView.builder(
                         itemCount: visits.length,
                         itemBuilder: (_, index) {
                           final visit = visits[index];
+                          final vdate = visit['visit_date'] ?? '';
                           final reason = visit['reason'] ?? '';
                           final prescriptions = visit['prescriptions'] ?? [];
                           final xrayUrl = visit['xray_image'];
                           final prescriptionText = prescriptions
-    .map((p) => '💊 ${p['medicine_name']} - ${p['instructions']}')
-    .join("\n");
+                              .map((p) => '💊 ${p['medicine_name']} - ${p['instructions']}')
+                              .join("\n");
 
                           return Card(
                             margin: const EdgeInsets.symmetric(vertical: 6),
@@ -147,28 +139,40 @@ class DoctorPage extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(reason, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                   Text(vdate, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  Text(reason),
                                   if (prescriptionText.isNotEmpty) ...[
                                     const SizedBox(height: 4),
                                     Text(prescriptionText),
                                   ],
-                                  if (xrayUrl != null) ...[
+                                  if (xrayUrl != null && xrayUrl.toString().trim().isNotEmpty) ...[
                                     const SizedBox(height: 8),
                                     Align(
-                                      alignment: Alignment.centerRight,
+                                      alignment: Alignment.centerLeft,
                                       child: GestureDetector(
                                         onTap: () => Get.dialog(
                                           Dialog(
+                                            insetPadding: const EdgeInsets.all(20),
                                             child: InteractiveViewer(
-                                              child: Image.network(xrayUrl),
+                                              child: Image.network(
+                                                xrayUrl,
+                                                fit: BoxFit.contain,
+                                                loadingBuilder: (context, child, progress) {
+                                                  if (progress == null) return child;
+                                                  return const Center(child: CircularProgressIndicator());
+                                                },
+                                              ),
                                             ),
                                           ),
                                         ),
-                                        child: Image.network(
-                                          xrayUrl,
-                                          height: 100,
-                                          width: 100,
-                                          fit: BoxFit.cover,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(6),
+                                          child: Image.network(
+                                            xrayUrl,
+                                            height: 100,
+                                            width: 100,
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
                                     ),

@@ -1,5 +1,4 @@
 import 'package:clinic/doctor.dart';
-import 'package:clinic/home_page.dart';
 import 'package:clinic/login.dart';
 import 'package:clinic/reception_home.dart';
 import 'package:clinic/register.dart';
@@ -20,7 +19,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Clinic Patient Management',
       theme: ThemeData(primarySwatch: Colors.teal),
-      initialRoute: '/',
+      initialRoute: '/doctor',
       getPages: [
         GetPage(name: '/', page: () =>  LoginPage()),
         GetPage(name: '/reception', page: () => const ReceptionistHomePage()),

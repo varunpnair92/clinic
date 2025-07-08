@@ -127,7 +127,7 @@ class DoctorPage extends StatelessWidget {
                           final vdate = visit['visit_date'] ?? '';
                           final reason = visit['reason'] ?? '';
                           final prescriptions = visit['prescriptions'] ?? [];
-                          final xrayUrl = visit['xray_image'];
+                          final xrayUrl = visit['xray_url'];
                           final prescriptionText = prescriptions
                               .map((p) => '💊 ${p['medicine_name']} - ${p['instructions']}')
                               .join("\n");
@@ -139,7 +139,7 @@ class DoctorPage extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                   Text(vdate, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  Text(vdate, style: const TextStyle(fontWeight: FontWeight.bold)),
                                   Text(reason),
                                   if (prescriptionText.isNotEmpty) ...[
                                     const SizedBox(height: 4),

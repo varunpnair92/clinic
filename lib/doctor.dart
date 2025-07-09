@@ -42,26 +42,33 @@ class DoctorPage extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const Text('Search', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Search',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   TextField(
                     controller: queryController,
-                    decoration: const InputDecoration(labelText: 'Name / Phone / OP'),
+                    decoration: const InputDecoration(
+                      labelText: 'Name / Phone / OP',
+                    ),
                     onChanged: (val) => api.searchPatient(val),
                   ),
                   const SizedBox(height: 10),
                   Expanded(
-                    child: Obx(() => ListView.builder(
-                          itemCount: api.searchResults.length,
-                          itemBuilder: (_, index) {
-                            final p = api.searchResults[index];
-                            return ListTile(
-                              title: Text(p['name'] ?? 'Unknown'),
-                              subtitle: Text(p['phone'] ?? 'N/A'),
-                              onTap: () => api.selectedPatient.value = p,
-                            );
-                          },
-                        )),
-                  )
+                    child: Obx(
+                      () => ListView.builder(
+                        itemCount: api.searchResults.length,
+                        itemBuilder: (_, index) {
+                          final p = api.searchResults[index];
+                          return ListTile(
+                            title: Text(p['name'] ?? 'Unknown'),
+                            subtitle: Text(p['phone'] ?? 'N/A'),
+                            onTap: () => api.selectedPatient.value = p,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -85,7 +92,13 @@ class DoctorPage extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Patient Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Patient Details',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     Text("Name: ${patient['name'] ?? 'N/A'}"),
                     Text("Age: ${patient['age'] ?? 'N/A'}"),
@@ -117,7 +130,13 @@ class DoctorPage extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Visit History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Visit History',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Expanded(
                       child: ListView.builder(
@@ -129,54 +148,79 @@ class DoctorPage extends StatelessWidget {
                           final prescriptions = visit['prescriptions'] ?? [];
                           final xrayUrl = visit['xray_url'];
                           final prescriptionText = prescriptions
-                              .map((p) => '💊 ${p['medicine_name']} - ${p['instructions']}')
+                              .map(
+                                (p) =>
+                                    '💊 ${p['medicine_name']} - ${p['instructions']}',
+                              )
                               .join("\n");
 
                           return Card(
                             margin: const EdgeInsets.symmetric(vertical: 6),
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Stack(
                                 children: [
-                                  Text(vdate, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  Text(reason),
-                                  if (prescriptionText.isNotEmpty) ...[
-                                    const SizedBox(height: 4),
-                                    Text(prescriptionText),
-                                  ],
-                                  if (xrayUrl != null && xrayUrl.toString().trim().isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 60.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          vdate,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(reason),
+                                        if (prescriptionText.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Text(prescriptionText),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  if (xrayUrl != null &&
+                                      xrayUrl.toString().trim().isNotEmpty)
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
                                       child: GestureDetector(
                                         onTap: () => Get.dialog(
                                           Dialog(
-                                            insetPadding: const EdgeInsets.all(20),
+                                            insetPadding: const EdgeInsets.all(
+                                              20,
+                                            ),
                                             child: InteractiveViewer(
                                               child: Image.network(
                                                 xrayUrl,
                                                 fit: BoxFit.contain,
-                                                loadingBuilder: (context, child, progress) {
-                                                  if (progress == null) return child;
-                                                  return const Center(child: CircularProgressIndicator());
-                                                },
+                                                loadingBuilder:
+                                                    (context, child, progress) {
+                                                      if (progress == null)
+                                                        return child;
+                                                      return const Center(
+                                                        child:
+                                                            CircularProgressIndicator(),
+                                                      );
+                                                    },
                                               ),
                                             ),
                                           ),
                                         ),
                                         child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
                                           child: Image.network(
                                             xrayUrl,
-                                            height: 100,
-                                            width: 100,
+                                            height: 60,
+                                            width: 60,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ]
                                 ],
                               ),
                             ),
@@ -192,7 +236,9 @@ class DoctorPage extends StatelessWidget {
                     const SizedBox(height: 8),
                     TextField(
                       controller: prescriptionController,
-                      decoration: const InputDecoration(labelText: 'Prescription'),
+                      decoration: const InputDecoration(
+                        labelText: 'Prescription',
+                      ),
                       maxLines: null,
                       keyboardType: TextInputType.multiline,
                     ),
@@ -201,8 +247,11 @@ class DoctorPage extends StatelessWidget {
                       children: [
                         ElevatedButton.icon(
                           onPressed: () async {
-                            final result = await FilePicker.platform.pickFiles(type: FileType.image);
-                            if (result != null && result.files.single.bytes != null) {
+                            final result = await FilePicker.platform.pickFiles(
+                              type: FileType.image,
+                            );
+                            if (result != null &&
+                                result.files.single.bytes != null) {
                               xrayBytes.value = result.files.single.bytes;
                               xrayName.value = result.files.single.name;
                             }

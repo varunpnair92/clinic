@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:clinic/shared.dart';
 import 'package:http_parser/http_parser.dart';
 
 import 'package:flutter/material.dart';
@@ -7,7 +8,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 class ApiController extends GetxController {
-  final String baseUrl = 'http://172.16.111.111:8000/clinic';
+  final String baseUrl = ApiConstants.baseUrl; // Use the base URL from shared.dart
     var selectedPatient = Rxn<Map>();  // <-- This line is essential
 
 

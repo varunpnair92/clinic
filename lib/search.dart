@@ -30,7 +30,7 @@ class SearchPage extends StatelessWidget {
                     final patient = apiController.searchResults[index];
                     return ListTile(
                       title: Text(patient['name']),
-                      subtitle: Text("Age: ${patient['age']}, Gender: ${patient['gender']}"),
+                      subtitle: Text("op number:${patient['op_number']}\nAge: ${patient['age']}, Gender: ${patient['gender']}"),
                     );
                   },
                 )),

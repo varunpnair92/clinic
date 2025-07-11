@@ -1,3 +1,4 @@
+import 'package:clinic/reception.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
@@ -69,6 +70,13 @@ class DoctorPage extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.toNamed('/reception');
+                    },
+                    child: Text('Register'),
+                  ),
                 ],
               ),
             ),
@@ -76,10 +84,8 @@ class DoctorPage extends StatelessWidget {
 
           // Middle: Patient Info + Add Visit Block
           Expanded(
-            
             flex: 1,
             child: Container(
-              
               margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -96,9 +102,6 @@ class DoctorPage extends StatelessWidget {
                   children: [
                     SingleChildScrollView(
                       child: Column(
-                        
-                       
-                       
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
@@ -109,6 +112,7 @@ class DoctorPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 20),
+                          Text("op Number: ${patient['op_number'] ?? 'N/A'}"),
                           Text("Name: ${patient['name'] ?? 'N/A'}"),
                           Text("Age: ${patient['age'] ?? 'N/A'}"),
                           Text("Gender: ${patient['gender'] ?? 'N/A'}"),
@@ -116,8 +120,12 @@ class DoctorPage extends StatelessWidget {
                           Text(
                             "Address: ${patient['address']?['address'] ?? 'N/A'}",
                           ),
+                          Text(
+                            style: TextStyle(color: Colors.green),
+                            "last visit: ${patient['last_visit_days_ago'] ?? 'N/A'}",
+                          ),
                           const Divider(height: 20, thickness: 2),
-                           const SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           const Text(
                             'Add Visit',
                             style: TextStyle(
@@ -128,7 +136,9 @@ class DoctorPage extends StatelessWidget {
                           const SizedBox(height: 8),
                           TextField(
                             controller: remarksController,
-                            decoration: const InputDecoration(labelText: 'Remarks'),
+                            decoration: const InputDecoration(
+                              labelText: 'Remarks',
+                            ),
                             maxLines: null,
                             keyboardType: TextInputType.multiline,
                           ),
@@ -162,8 +172,9 @@ class DoctorPage extends StatelessWidget {
                                 onPressed: () async {
                                   final id = patient['id'];
                                   final reason = remarksController.text;
-                                  final prescription = prescriptionController.text;
-                    
+                                  final prescription =
+                                      prescriptionController.text;
+
                                   final visitId = await api.addVisitWithImage(
                                     patientId: id,
                                     reason: reason,
@@ -171,10 +182,11 @@ class DoctorPage extends StatelessWidget {
                                     xrayBytes: xrayBytes.value,
                                     fileName: xrayName.value,
                                   );
-                    
+
                                   if (visitId != null) {
                                     await api.searchPatient(patient['name']);
-                                    api.selectedPatient.value = api.searchResults
+                                    api.selectedPatient.value = api
+                                        .searchResults
                                         .firstWhere(
                                           (p) => p['id'] == patient['id'],
                                         );

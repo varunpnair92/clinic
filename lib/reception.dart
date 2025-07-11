@@ -36,7 +36,7 @@ class ReceptionPage extends StatelessWidget {
                     final p = apiController.searchResults[i];
                     return ListTile(
                       title: Text(p['name']),
-                      subtitle: Text("Age: \${p['age']}, Gender: \${p['gender']}\nPhone: \${p['address']['phone']}\n\${p['address']['address']}"),
+                      subtitle: Text("op number: \${p['op_number']} \n Age: \${p['age']}, Gender: \${p['gender']}\nPhone: \${p['address']['phone']}\n\${p['address']['address']}"),
                       isThreeLine: true,
                     );
                   },

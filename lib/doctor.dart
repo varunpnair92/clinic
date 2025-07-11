@@ -74,10 +74,12 @@ class DoctorPage extends StatelessWidget {
             ),
           ),
 
-          // Middle: Patient Info
+          // Middle: Patient Info + Add Visit Block
           Expanded(
+            
             flex: 1,
             child: Container(
+              
               margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -90,28 +92,112 @@ class DoctorPage extends StatelessWidget {
                   return const Center(child: Text("No Patient Selected"));
                 }
                 return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Patient Details',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    SingleChildScrollView(
+                      child: Column(
+                        
+                       
+                       
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Patient Details',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text("Name: ${patient['name'] ?? 'N/A'}"),
+                          Text("Age: ${patient['age'] ?? 'N/A'}"),
+                          Text("Gender: ${patient['gender'] ?? 'N/A'}"),
+                          Text("Phone: ${patient['phone'] ?? 'N/A'}"),
+                          Text(
+                            "Address: ${patient['address']?['address'] ?? 'N/A'}",
+                          ),
+                          const Divider(height: 20, thickness: 2),
+                           const SizedBox(height: 20),
+                          const Text(
+                            'Add Visit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: remarksController,
+                            decoration: const InputDecoration(labelText: 'Remarks'),
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: prescriptionController,
+                            decoration: const InputDecoration(
+                              labelText: 'Prescription',
+                            ),
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final result = await FilePicker.platform
+                                      .pickFiles(type: FileType.image);
+                                  if (result != null &&
+                                      result.files.single.bytes != null) {
+                                    xrayBytes.value = result.files.single.bytes;
+                                    xrayName.value = result.files.single.name;
+                                  }
+                                },
+                                icon: const Icon(Icons.upload),
+                                label: const Text("Pick X-Ray"),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final id = patient['id'];
+                                  final reason = remarksController.text;
+                                  final prescription = prescriptionController.text;
+                    
+                                  final visitId = await api.addVisitWithImage(
+                                    patientId: id,
+                                    reason: reason,
+                                    prescription: prescription,
+                                    xrayBytes: xrayBytes.value,
+                                    fileName: xrayName.value,
+                                  );
+                    
+                                  if (visitId != null) {
+                                    await api.searchPatient(patient['name']);
+                                    api.selectedPatient.value = api.searchResults
+                                        .firstWhere(
+                                          (p) => p['id'] == patient['id'],
+                                        );
+                                    remarksController.clear();
+                                    prescriptionController.clear();
+                                    xrayBytes.value = null;
+                                    xrayName.value = '';
+                                  }
+                                },
+                                child: const Text("Add Visit"),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Text("Name: ${patient['name'] ?? 'N/A'}"),
-                    Text("Age: ${patient['age'] ?? 'N/A'}"),
-                    Text("Gender: ${patient['gender'] ?? 'N/A'}"),
-                    Text("Phone: ${patient['phone'] ?? 'N/A'}"),
-                    Text("Address: ${patient['address']?['address'] ?? 'N/A'}"),
                   ],
                 );
               }),
             ),
           ),
 
-          // Right: Visit History + Add Visit
+          // Right: Visit History
           Expanded(
             flex: 3,
             child: Container(
@@ -214,8 +300,8 @@ class DoctorPage extends StatelessWidget {
                                           ),
                                           child: Image.network(
                                             xrayUrl,
-                                            height: 60,
-                                            width: 60,
+                                            height: 40,
+                                            width: 40,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -227,66 +313,6 @@ class DoctorPage extends StatelessWidget {
                           );
                         },
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: remarksController,
-                      decoration: const InputDecoration(labelText: 'Remarks'),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: prescriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Prescription',
-                      ),
-                      maxLines: null,
-                      keyboardType: TextInputType.multiline,
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            final result = await FilePicker.platform.pickFiles(
-                              type: FileType.image,
-                            );
-                            if (result != null &&
-                                result.files.single.bytes != null) {
-                              xrayBytes.value = result.files.single.bytes;
-                              xrayName.value = result.files.single.name;
-                            }
-                          },
-                          icon: const Icon(Icons.upload),
-                          label: const Text("Pick X-Ray"),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          onPressed: () async {
-                            final id = patient['id'];
-                            final reason = remarksController.text;
-                            final prescription = prescriptionController.text;
-
-                            final visitId = await api.addVisitWithImage(
-                              patientId: id,
-                              reason: reason,
-                              prescription: prescription,
-                              xrayBytes: xrayBytes.value,
-                              fileName: xrayName.value,
-                            );
-
-                            if (visitId != null) {
-                              await api.searchPatient(patient['name']);
-                              api.selectedPatient.value = api.searchResults
-                                  .firstWhere((p) => p['id'] == patient['id']);
-                              remarksController.clear();
-                              prescriptionController.clear();
-                              xrayBytes.value = null;
-                              xrayName.value = '';
-                            }
-                          },
-                          child: const Text("Add Visit"),
-                        ),
-                      ],
                     ),
                   ],
                 );

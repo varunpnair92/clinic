@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Clinic Patient Management',
       theme: ThemeData(primarySwatch: Colors.teal),
-      initialRoute: '/doctor',
+      initialRoute: '/',
       getPages: [
         GetPage(name: '/', page: () =>  LoginPage()),
         GetPage(name: '/reception', page: () => const ReceptionistHomePage()),

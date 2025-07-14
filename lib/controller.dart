@@ -35,7 +35,9 @@ Future<bool> loginUser(String username, String password) async {
 
 
   Future<void> searchPatient(String query) async {
+    //searchResults.value = [];
     loading.value = true;
+    print('Searching for: $query');
     try {
       final res = await http.get(Uri.parse('$baseUrl/search/?q=$query'));
       if (res.statusCode == 200) {

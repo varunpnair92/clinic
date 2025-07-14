@@ -1,4 +1,3 @@
-import 'package:clinic/reception.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
@@ -10,6 +9,8 @@ class DoctorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+     final focusNode = FocusNode();
+
     final api = Get.put(ApiController());
     final queryController = TextEditingController();
     final remarksController = TextEditingController();
@@ -48,11 +49,13 @@ class DoctorPage extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   TextField(
+                    focusNode: focusNode,
+            autofocus: true,
                     controller: queryController,
                     decoration: const InputDecoration(
                       labelText: 'Name / Phone / OP',
                     ),
-                    onChanged: (val) => api.searchPatient(val),
+                    onSubmitted: (val) => api.searchPatient(val),
                   ),
                   const SizedBox(height: 10),
                   Expanded(

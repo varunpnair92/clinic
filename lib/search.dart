@@ -9,7 +9,9 @@ class SearchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final queryController = TextEditingController();
+    final focusNode = FocusNode();
     final apiController = Get.put(ApiController());
+
     return CenteredPage(
       child: Column(
         children: [
@@ -17,8 +19,22 @@ class SearchPage extends StatelessWidget {
           const SizedBox(height: 20),
           TextField(
             controller: queryController,
+            focusNode: focusNode,
+            autofocus: true,  // Automatically focus when page opens
             decoration: const InputDecoration(labelText: 'Name or Phone'),
-            onChanged: (val) => apiController.searchPatient(val),
+            onChanged: (val) {
+              // Optional live search
+            },
+            onSubmitted: (val) {
+              apiController.searchPatient(val);
+            },
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () {
+              apiController.searchPatient(queryController.text);
+            },
+            child: const Text('Search'),
           ),
           const SizedBox(height: 10),
           Obx(() => apiController.loading.value

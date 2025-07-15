@@ -20,15 +20,15 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Clinic Patient Management',
       theme: ThemeData(primarySwatch: Colors.teal),
-      initialRoute: '/searchEdit',
+      initialRoute: '/',
       getPages: [
         GetPage(name: '/', page: () =>  LoginPage()),
         GetPage(name: '/reception', page: () => const ReceptionistHomePage()),
         GetPage(name: '/register', page: () => const RegisterPage()),
-        GetPage(name: '/search', page: () => const SearchPage()),
+        GetPage(name: '/search_old', page: () => const SearchPage()),
         GetPage(name: '/doctor', page: () => const DoctorPage()),
         GetPage(name: '/reports', page: () => const ReportsPage()),
-        GetPage(name: '/searchEdit', page: () => const PatientSearchAndEditPage()),
+        GetPage(name: '/search', page: () => const PatientSearchAndEditPage()),
       ],
     );
   }

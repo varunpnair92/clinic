@@ -25,6 +25,8 @@ class ApiController extends GetxController {
   final genderCtrl = TextEditingController();
   final phoneCtrl = TextEditingController();
   final addressCtrl = TextEditingController();
+  final dobDate =TextEditingController();
+  var selectedDob = Rxn<DateTime>();
 
 Future<bool> loginUser(String username, String password) async {
   final response = await http.post(

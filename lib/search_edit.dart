@@ -10,6 +10,7 @@ class PatientSearchAndEditPage extends StatelessWidget {
     final apiController = Get.put(ApiController());
     final queryController = TextEditingController();
     final bool isWideScreen = MediaQuery.of(context).size.width > 600;
+     final focusNode = FocusNode();
 
     Widget searchPanel() {
       return Expanded(
@@ -21,10 +22,13 @@ class PatientSearchAndEditPage extends StatelessWidget {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             TextField(
+               focusNode: focusNode,
+              autofocus: true,
               controller: queryController,
               decoration: const InputDecoration(
                   labelText: 'Name or Phone', contentPadding: EdgeInsets.all(8)),
-              onSubmitted: (val) => apiController.searchPatient(val),
+              onSubmitted: (val) => apiController.searchPatient(val).then((_) => focusNode.requestFocus()),
+              
             ),
             ElevatedButton(
               onPressed: () => apiController.searchPatient(queryController.text),
@@ -57,6 +61,13 @@ class PatientSearchAndEditPage extends StatelessWidget {
                             patient['phone'] ?? '';
                         apiController.addressCtrl.text =
                             patient['address']?['address'] ?? '';
+
+                        final dobString = patient['dob'];
+                        if (dobString != null && dobString.isNotEmpty) {
+                          apiController.selectedDob.value = DateTime.tryParse(dobString);
+                        } else {
+                          apiController.selectedDob.value = null;
+                        }
                       },
                     );
                   },
@@ -90,27 +101,62 @@ class PatientSearchAndEditPage extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text('OP Number: ${patient['op_number']}',
                       style: const TextStyle(color: Colors.grey)),
+
                   TextField(
                       controller: apiController.nameCtrl,
                       decoration: const InputDecoration(labelText: 'Name')),
+
                   TextField(
                       controller: apiController.ageCtrl,
                       decoration: const InputDecoration(labelText: 'Age')),
+
+                  // 📅 Date of Birth Picker
+                  Obx(() {
+                    final dob = apiController.selectedDob.value;
+                    return InkWell(
+                      onTap: () async {
+                        final pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: dob ?? DateTime(2000),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime.now(),
+                        );
+                        if (pickedDate != null) {
+                          apiController.selectedDob.value = pickedDate;
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: const InputDecoration(labelText: 'Date of Birth'),
+                        child: Text(
+                          dob == null
+                              ? 'Select Date'
+                              : "${dob.year.toString().padLeft(4, '0')}-${dob.month.toString().padLeft(2, '0')}-${dob.day.toString().padLeft(2, '0')}",
+                        ),
+                      ),
+                    );
+                  }),
+
                   TextField(
                       controller: apiController.genderCtrl,
                       decoration: const InputDecoration(labelText: 'Gender')),
+
                   TextField(
                       controller: apiController.phoneCtrl,
                       decoration: const InputDecoration(labelText: 'Phone')),
+
                   TextField(
                       controller: apiController.addressCtrl,
                       decoration: const InputDecoration(labelText: 'Address')),
+
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
                       final updatedData = {
                         'name': apiController.nameCtrl.text,
                         'age': int.tryParse(apiController.ageCtrl.text) ?? 0,
+                        'dob': apiController.selectedDob.value == null
+                            ? null
+                            : "${apiController.selectedDob.value!.year.toString().padLeft(4, '0')}-${apiController.selectedDob.value!.month.toString().padLeft(2, '0')}-${apiController.selectedDob.value!.day.toString().padLeft(2, '0')}",
                         'gender': apiController.genderCtrl.text,
                         'phone': apiController.phoneCtrl.text,
                         'address': {

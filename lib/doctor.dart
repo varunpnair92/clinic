@@ -55,7 +55,7 @@ class DoctorPage extends StatelessWidget {
                     decoration: const InputDecoration(
                       labelText: 'Name / Phone / OP',
                     ),
-                    onSubmitted: (val) => api.searchPatient(val),
+                    onSubmitted: (val) => api.searchPatient(val).then((_) => focusNode.requestFocus()),
                   ),
                   const SizedBox(height: 10),
                   Expanded(

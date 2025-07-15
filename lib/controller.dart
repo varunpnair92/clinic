@@ -18,6 +18,14 @@ class ApiController extends GetxController {
 
   var loggedInUser = {}.obs;
 
+
+  // Form Controllers
+  final nameCtrl = TextEditingController();
+  final ageCtrl = TextEditingController();
+  final genderCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController();
+  final addressCtrl = TextEditingController();
+
 Future<bool> loginUser(String username, String password) async {
   final response = await http.post(
     Uri.parse('$baseUrl/login/'),
@@ -249,6 +257,47 @@ Future<void> updateVisit(int visitId, Map<String, dynamic> data) async {
     }
   }
 
+
+
+/// Select patient to load details
+  void loadPatientDetails(Map<String, dynamic> patient) {
+    selectedPatient.value = patient;
+
+    // Fill form controllers
+    nameCtrl.text = patient['name'] ?? '';
+    ageCtrl.text = '${patient['age'] ?? ''}';
+    genderCtrl.text = patient['gender'] ?? '';
+    phoneCtrl.text = patient['phone'] ?? '';
+    addressCtrl.text = patient['address']?['address'] ?? '';
+  }
+
+  /// Update selected patient details
+  Future<void> updatePatient(int patientId, Map<String, dynamic> updatedData) async {
+    loading.value = true;
+    try {
+      final url = Uri.parse('$baseUrl/update/$patientId/');
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(updatedData),
+      );
+
+      if (response.statusCode == 200) {
+        
+        Get.snackbar('Success', 'Patient updated successfully',duration: const Duration(seconds: 3),);
+        await Future.delayed(const Duration(milliseconds: 2000));
+        // Optionally refresh patient data here
+      } else {
+        Get.snackbar('Error', 'Failed to update patient',duration: const Duration(seconds: 3),);
+        await Future.delayed(const Duration(milliseconds: 2000));
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to update patient',duration: const Duration(seconds: 3),);
+      await Future.delayed(const Duration(milliseconds: 2000));
+    } finally {
+      loading.value = false;
+    }
+  }
 
 
 

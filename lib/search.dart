@@ -1,5 +1,5 @@
-import 'package:clinic/center_page.dart';
 import 'package:clinic/controller.dart';
+import 'package:clinic/patient_details.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -8,28 +8,21 @@ class SearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final queryController = TextEditingController();
-    final focusNode = FocusNode();
     final apiController = Get.put(ApiController());
+    final queryController = TextEditingController();
 
-    return CenteredPage(
-      child: Column(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Search Patient')),
+      body: Column(
         children: [
-          const Text('Search Patient', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
           TextField(
             controller: queryController,
-            focusNode: focusNode,
-            autofocus: true,  // Automatically focus when page opens
-            decoration: const InputDecoration(labelText: 'Name or Phone'),
-            onChanged: (val) {
-              // Optional live search
-            },
-            onSubmitted: (val) {
-              apiController.searchPatient(val);
-            },
+            decoration: const InputDecoration(
+              labelText: 'Name or Phone',
+              contentPadding: EdgeInsets.all(8),
+            ),
+            onSubmitted: (val) => apiController.searchPatient(val),
           ),
-          const SizedBox(height: 10),
           ElevatedButton(
             onPressed: () {
               apiController.searchPatient(queryController.text);
@@ -37,19 +30,29 @@ class SearchPage extends StatelessWidget {
             child: const Text('Search'),
           ),
           const SizedBox(height: 10),
-          Obx(() => apiController.loading.value
-              ? const CircularProgressIndicator()
-              : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: apiController.searchResults.length,
-                  itemBuilder: (context, index) {
-                    final patient = apiController.searchResults[index];
-                    return ListTile(
-                      title: Text(patient['name']),
-                      subtitle: Text("op number:${patient['op_number']}\nAge: ${patient['age']}, Gender: ${patient['gender']}"),
-                    );
-                  },
-                )),
+          Expanded(
+            child: Obx(() {
+              if (apiController.loading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (apiController.searchResults.isEmpty) {
+                return const Center(child: Text('No patients found.'));
+              }
+              return ListView.builder(
+                itemCount: apiController.searchResults.length,
+                itemBuilder: (context, index) {
+                  final patient = apiController.searchResults[index];
+                  return ListTile(
+                    title: Text(patient['name']),
+                    subtitle: Text('OP: ${patient['op_number']}'),
+                    onTap: () {
+                      Get.to(() => PatientDetailPage(patient: patient));
+                    },
+                  );
+                },
+              );
+            }),
+          ),
         ],
       ),
     );

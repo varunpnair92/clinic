@@ -187,6 +187,7 @@ Future<int?> addVisitWithImage({
   required String prescription,
   Uint8List? xrayBytes,
   String? fileName,
+  DateTime? visitDate, // ✅ Optional date
 }) async {
   final uri = Uri.parse('$baseUrl/add/');
   final request = http.MultipartRequest('POST', uri);
@@ -200,14 +201,20 @@ Future<int?> addVisitWithImage({
     }
   ]);
 
+  // ✅ Add optional date
+  if (visitDate != null) {
+    print("in addVisitWithImage, visitDate: $visitDate");
+    request.fields['visit_date'] = visitDate.toIso8601String();
+  }
+
   // ✅ Add file if available
   if (xrayBytes != null && fileName != null && fileName.isNotEmpty) {
     request.files.add(
       http.MultipartFile.fromBytes(
-        'xray', // must match Django view
+        'xray',
         xrayBytes,
         filename: fileName,
-        contentType: MediaType('image', 'jpeg'), // Add `import 'package:http_parser/http_parser.dart';`
+        contentType: MediaType('image', 'jpeg'),
       ),
     );
   }

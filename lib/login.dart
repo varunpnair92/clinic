@@ -1,13 +1,13 @@
 import 'package:clinic/center_page.dart';
 import 'package:clinic/controller.dart';
-import 'package:clinic/doctor.dart';
-import 'package:clinic/reception_home.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LoginPage extends StatelessWidget {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+
+  LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +42,11 @@ class LoginPage extends StatelessWidget {
 
               if (success) {
                 if (api.loggedInUser['role'] == 'doctor') {
-                  Get.off(() => const DoctorPage());
+                  Get.toNamed('/doctor');
+                } else if (api.loggedInUser['role'] == 'receptionist') {
+                  Get.toNamed('/reception');
                 } else {
-                  Get.off(() => const ReceptionistHomePage());
+                  Get.toNamed('/admin');
                 }
               } else {
                 Get.snackbar("Error", "Login failed");

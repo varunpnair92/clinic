@@ -28,6 +28,16 @@ class ApiController extends GetxController {
   final dobDate =TextEditingController();
   var selectedDob = Rxn<DateTime>();
 
+  //load roels
+  final RxString selectedRole = ''.obs;
+
+final List<Map<String, String>> roleOptions = [
+  {'key': 'doctor', 'label': 'Doctor'},
+  {'key': 'receptionist', 'label': 'Receptionist'},
+  {'key': 'admin', 'label': 'Admin'},
+];
+
+
 Future<bool> loginUser(String username, String password) async {
   final response = await http.post(
     Uri.parse('$baseUrl/login/'),
@@ -47,7 +57,7 @@ Future<bool> loginUser(String username, String password) async {
   Future<void> searchPatient(String query) async {
     //searchResults.value = [];
     loading.value = true;
-    print('Searching for: $query');
+   // print('Searching for: $query');
     try {
       final res = await http.get(Uri.parse('$baseUrl/search/?q=$query'));
       if (res.statusCode == 200) {
@@ -63,7 +73,7 @@ Future<bool> loginUser(String username, String password) async {
   }
 
   Future<void> registerPatient(Map<String, dynamic> data) async {
-  print("registerPatient called with data: $data");
+  //print("registerPatient called with data: $data");
 
   try {
     final response = await http.post(
@@ -72,8 +82,8 @@ Future<bool> loginUser(String username, String password) async {
       body: json.encode(data),
     );
 
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+   // print('Response status: ${response.statusCode}');
+    //print('Response body: ${response.body}');
 
     final responseData = json.decode(response.body);
 
@@ -128,7 +138,7 @@ Future<bool> loginUser(String username, String password) async {
       );
     }
   } catch (e) {
-    print('Error during registration: $e');
+   // print('Error during registration: $e');
     Get.snackbar(
       'Error',
       'Network error: $e',
@@ -219,10 +229,10 @@ Future<int?> addVisitWithImage({
       final responseData = json.decode(response.body);
       return responseData['visit_id'];
     } else {
-      print('Failed: ${response.body}');
+     // print('Failed: ${response.body}');
     }
   } catch (e) {
-    print('Error: $e');
+    //print('Error: $e');
   }
   return null;
 }
@@ -302,5 +312,43 @@ Future<void> updateVisit(int visitId, Map<String, dynamic> data) async {
   }
 
 
+//password change block
 
+Future<void> addUser(String username, String password, String role) async {
+    final url = Uri.parse('$baseUrl/add_user/');
+    final response = await http.post(
+      url,
+      body: {
+        'username': username,
+        'password': password,
+        'role': role,
+      },
+    );
+
+    if (response.statusCode == 201) {
+      Get.snackbar('Success', 'User added successfully');
+    } else {
+      Get.snackbar('Error', 'Failed to add user');
+    }
+  }
+
+  Future<void> changePassword(String username, String newPassword) async {
+    final url = Uri.parse('$baseUrl/change_password/');
+    final response = await http.post(
+      url,
+      body: {
+        'username': username,
+        'new_password': newPassword,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Get.snackbar('Success', 'Password changed successfully');
+    } else {
+      Get.snackbar('Error', 'Failed to change password');
+    }
+  }
 }
+
+
+

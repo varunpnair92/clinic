@@ -299,7 +299,10 @@ class DoctorPage extends StatelessWidget {
                                                 loadingBuilder:
                                                     (context, child, progress) {
                                                       if (progress == null)
-                                                        return child;
+                                                      {
+                                                             return child;
+                                                      }
+                                                       
                                                       return const Center(
                                                         child:
                                                             CircularProgressIndicator(),

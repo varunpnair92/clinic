@@ -1,3 +1,4 @@
+import 'package:clinic/admin.dart';
 import 'package:clinic/doctor.dart';
 import 'package:clinic/login.dart';
 import 'package:clinic/reception_home.dart';
@@ -5,6 +6,7 @@ import 'package:clinic/register.dart';
 import 'package:clinic/report.dart';
 import 'package:clinic/search.dart';
 import 'package:clinic/search_edit.dart';
+import 'package:clinic/usermanagment.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -29,6 +31,8 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/doctor', page: () => const DoctorPage()),
         GetPage(name: '/reports', page: () => const ReportsPage()),
         GetPage(name: '/search', page: () => const PatientSearchAndEditPage()),
+         GetPage(name: '/user', page: () =>  UserManagementPage()),
+         GetPage(name: '/admin', page: () =>  AdminPanelPage()),
       ],
     );
   }

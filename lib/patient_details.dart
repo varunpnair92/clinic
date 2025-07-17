@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 class PatientDetailPage extends StatelessWidget {
   final Map<String, dynamic> patient;
 
-  PatientDetailPage({required this.patient, super.key});
+  const PatientDetailPage({required this.patient, super.key});
 
   @override
   Widget build(BuildContext context) {

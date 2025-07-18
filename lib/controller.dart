@@ -6,6 +6,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiController extends GetxController {
   final String baseUrl = ApiConstants.baseUrl; // Use the base URL from shared.dart
@@ -46,7 +47,9 @@ Future<bool> loginUser(String username, String password) async {
   );
 
   if (response.statusCode == 200) {
+
     loggedInUser.value = jsonDecode(response.body);
+    await saveLoginDetails(loggedInUser['role']); 
     return true;
   } else {
     return false;
@@ -348,6 +351,11 @@ Future<void> addUser(String username, String password, String role) async {
       Get.snackbar('Error', 'Failed to change password');
     }
   }
+
+  Future<void> saveLoginDetails(String role) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('role', role);
+}
 }
 
 

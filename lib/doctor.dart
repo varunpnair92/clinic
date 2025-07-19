@@ -9,7 +9,7 @@ class DoctorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     final focusNode = FocusNode();
+    final focusNode = FocusNode();
 
     final api = Get.put(ApiController());
     final queryController = TextEditingController();
@@ -50,12 +50,14 @@ class DoctorPage extends StatelessWidget {
                   ),
                   TextField(
                     focusNode: focusNode,
-            autofocus: true,
+                    autofocus: true,
                     controller: queryController,
                     decoration: const InputDecoration(
                       labelText: 'Name / Phone / OP',
                     ),
-                    onSubmitted: (val) => api.searchPatient(val).then((_) => focusNode.requestFocus()),
+                    onSubmitted: (val) => api
+                        .searchPatient(val)
+                        .then((_) => focusNode.requestFocus()),
                   ),
                   const SizedBox(height: 10),
                   Expanded(
@@ -155,51 +157,130 @@ class DoctorPage extends StatelessWidget {
                             keyboardType: TextInputType.multiline,
                           ),
                           const SizedBox(height: 10),
-                          Row(
+                          Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              ElevatedButton.icon(
-                                onPressed: () async {
-                                  final result = await FilePicker.platform
-                                      .pickFiles(type: FileType.image);
-                                  if (result != null &&
-                                      result.files.single.bytes != null) {
-                                    xrayBytes.value = result.files.single.bytes;
-                                    xrayName.value = result.files.single.name;
-                                  }
-                                },
-                                icon: const Icon(Icons.upload),
-                                label: const Text("Pick X-Ray"),
+                              SizedBox(
+                                width:180,
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    final result = await FilePicker.platform
+                                        .pickFiles(type: FileType.image);
+                                    if (result != null &&
+                                        result.files.single.bytes != null) {
+                                      xrayBytes.value = result.files.single.bytes;
+                                      xrayName.value = result.files.single.name;
+                                    }
+                                  },
+                                  icon: const Icon(Icons.upload),
+                                  label: const Text("Pick X-Ray"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.greenAccent,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(width: 10),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  final id = patient['id'];
-                                  final reason = remarksController.text;
-                                  final prescription =
-                                      prescriptionController.text;
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                width:180,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text('Add Visit'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                  ),
+                                  
+                                  onPressed: () async {
+                                    final id = patient['id'];
+                                    final reason = remarksController.text;
+                                    final prescription =
+                                        prescriptionController.text;
+                                
+                                    final visitId = await api.addVisitWithImage(
+                                      patientId: id,
+                                      reason: reason,
+                                      prescription: prescription,
+                                      xrayBytes: xrayBytes.value,
+                                      fileName: xrayName.value,
+                                    );
+                                
+                                    if (visitId != null) {
+                                      await api.searchPatient(patient['name']);
+                                      api.selectedPatient.value = api
+                                          .searchResults
+                                          .firstWhere(
+                                            (p) => p['id'] == patient['id'],
+                                          );
+                                      remarksController.clear();
+                                      prescriptionController.clear();
+                                      xrayBytes.value = null;
+                                      xrayName.value = '';
+                                    }
+                                  },
+                                  
+                                ),
+                              ),
 
-                                  final visitId = await api.addVisitWithImage(
-                                    patientId: id,
-                                    reason: reason,
-                                    prescription: prescription,
-                                    xrayBytes: xrayBytes.value,
-                                    fileName: xrayName.value,
-                                  );
-
-                                  if (visitId != null) {
-                                    await api.searchPatient(patient['name']);
-                                    api.selectedPatient.value = api
-                                        .searchResults
-                                        .firstWhere(
-                                          (p) => p['id'] == patient['id'],
+                               const SizedBox(height: 20),
+                              SizedBox(
+                                width:180,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text('Delete Patient'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  onPressed: () async {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Confirm Delete'),
+                                        content: const Text(
+                                          'Are you sure you want to delete this patient? This action cannot be undone.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                
+                                    if (confirmed == true) {
+                                      final success = await api.deletePatient(
+                                        patient['id'],
+                                      );
+                                      if (success) {
+                                        Get.snackbar(
+                                          'Deleted',
+                                          'Patient deleted successfully.',
                                         );
-                                    remarksController.clear();
-                                    prescriptionController.clear();
-                                    xrayBytes.value = null;
-                                    xrayName.value = '';
-                                  }
-                                },
-                                child: const Text("Add Visit"),
+                                        api.selectedPatient.value = null;
+                                        queryController.clear();
+                                        await api.searchPatient(
+                                          '',
+                                        ); // Refresh patient list
+                                      } else {
+                                        Get.snackbar(
+                                          'Error',
+                                          'Failed to delete patient.',
+                                        );
+                                      }
+                                    }
+                                  },
+                                ),
                               ),
                             ],
                           ),
@@ -298,11 +379,10 @@ class DoctorPage extends StatelessWidget {
                                                 fit: BoxFit.contain,
                                                 loadingBuilder:
                                                     (context, child, progress) {
-                                                      if (progress == null)
-                                                      {
-                                                             return child;
+                                                      if (progress == null) {
+                                                        return child;
                                                       }
-                                                       
+
                                                       return const Center(
                                                         child:
                                                             CircularProgressIndicator(),

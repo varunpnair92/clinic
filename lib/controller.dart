@@ -356,6 +356,20 @@ Future<void> addUser(String username, String password, String role) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('role', role);
 }
+
+Future<bool> deletePatient(int patientId) async {
+  final url = Uri.parse('$baseUrl/delete/$patientId/');
+
+  final response = await http.delete(url);
+
+  if (response.statusCode == 200) {
+    return true;
+  } else {
+   // print('Failed to delete patient: ${response.body}');
+    return false;
+  }
+}
+
 }
 
 

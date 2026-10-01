@@ -207,12 +207,7 @@ class DoctorPage extends StatelessWidget {
                                     );
                                 
                                     if (visitId != null) {
-                                      await api.searchPatient(patient['name']);
-                                      api.selectedPatient.value = api
-                                          .searchResults
-                                          .firstWhere(
-                                            (p) => p['id'] == patient['id'],
-                                          );
+                                      await api.refreshSelectedPatient();
                                       remarksController.clear();
                                       prescriptionController.clear();
                                       xrayBytes.value = null;
@@ -339,72 +334,179 @@ class DoctorPage extends StatelessWidget {
                           return Card(
                             margin: const EdgeInsets.symmetric(vertical: 6),
                             child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Stack(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 60.0),
+                                  // Left side: Visit Details
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          vdate,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.calendar_today,
+                                              size: 14,
+                                              color: Colors.blueGrey,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              vdate,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        Text(reason),
+                                        if (reason.isNotEmpty) ...[
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            reason,
+                                            style: const TextStyle(fontSize: 14),
+                                          ),
+                                        ],
                                         if (prescriptionText.isNotEmpty) ...[
-                                          const SizedBox(height: 4),
-                                          Text(prescriptionText),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            prescriptionText,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.teal.shade900,
+                                            ),
+                                          ),
                                         ],
                                       ],
                                     ),
                                   ),
-                                  if (xrayUrl != null &&
-                                      xrayUrl.toString().trim().isNotEmpty)
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: GestureDetector(
-                                        onTap: () => Get.dialog(
-                                          Dialog(
-                                            insetPadding: const EdgeInsets.all(
-                                              20,
+
+                                  // Right side: X-Ray Thumbnail + Edit & Delete Actions
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      if (xrayUrl != null &&
+                                          xrayUrl
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty) ...[
+                                        GestureDetector(
+                                          onTap: () => Get.dialog(
+                                            Dialog(
+                                              insetPadding:
+                                                  const EdgeInsets.all(20),
+                                              child: InteractiveViewer(
+                                                child: Image.network(
+                                                  xrayUrl,
+                                                  fit: BoxFit.contain,
+                                                  loadingBuilder: (
+                                                    context,
+                                                    child,
+                                                    progress,
+                                                  ) {
+                                                    if (progress == null) {
+                                                      return child;
+                                                    }
+
+                                                    return const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
                                             ),
-                                            child: InteractiveViewer(
+                                          ),
+                                          child: Tooltip(
+                                            message: 'View X-Ray',
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                               child: Image.network(
                                                 xrayUrl,
-                                                fit: BoxFit.contain,
-                                                loadingBuilder:
-                                                    (context, child, progress) {
-                                                      if (progress == null) {
-                                                        return child;
-                                                      }
-
-                                                      return const Center(
-                                                        child:
-                                                            CircularProgressIndicator(),
-                                                      );
-                                                    },
+                                                height: 40,
+                                                width: 40,
+                                                fit: BoxFit.cover,
                                               ),
                                             ),
                                           ),
                                         ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          child: Image.network(
-                                            xrayUrl,
-                                            height: 40,
-                                            width: 40,
-                                            fit: BoxFit.cover,
-                                          ),
+                                        const SizedBox(width: 4),
+                                      ],
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.edit,
+                                          color: Colors.blue,
+                                          size: 20,
                                         ),
+                                        tooltip: 'Edit Visit',
+                                        onPressed: () {
+                                          _showEditVisitDialog(
+                                            context,
+                                            api,
+                                            visit,
+                                          );
+                                        },
                                       ),
-                                    ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                          size: 20,
+                                        ),
+                                        tooltip: 'Delete Visit',
+                                        onPressed: () async {
+                                          final confirmed =
+                                              await showDialog<bool>(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              title: const Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.warning_amber_rounded,
+                                                    color: Colors.red,
+                                                  ),
+                                                  SizedBox(width: 8),
+                                                  Text('Confirm Delete Visit'),
+                                                ],
+                                              ),
+                                              content: Text(
+                                                'Are you sure you want to delete this visit (${vdate.isNotEmpty ? vdate : 'selected'})?\nThis action cannot be undone.',
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, false),
+                                                  child: const Text('Cancel'),
+                                                ),
+                                                ElevatedButton(
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor: Colors.red,
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, true),
+                                                  child: const Text(
+                                                    'Delete',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+
+                                          if (confirmed == true) {
+                                            await api.deleteVisit(visit['id']);
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ),
@@ -415,6 +517,95 @@ class DoctorPage extends StatelessWidget {
                   ],
                 );
               }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  void _showEditVisitDialog(
+    BuildContext context,
+    ApiController api,
+    Map<dynamic, dynamic> visit,
+  ) {
+    final editReasonController =
+        TextEditingController(text: visit['reason'] ?? '');
+    final prescriptions = visit['prescriptions'] ?? [];
+    String initialPrescription = '';
+    if (prescriptions is List) {
+      initialPrescription = prescriptions
+          .map((p) {
+            final name = p['medicine_name'] ?? '';
+            final inst = p['instructions'] ?? '';
+            if (inst.toString().trim().isNotEmpty) {
+              return '$name - $inst';
+            }
+            return name.toString();
+          })
+          .where((s) => s.trim().isNotEmpty)
+          .join('\n');
+    }
+    final editPrescriptionController =
+        TextEditingController(text: initialPrescription);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.edit_note, color: Colors.blue),
+            const SizedBox(width: 8),
+            Text('Edit Visit (${visit['visit_date'] ?? ''})'),
+          ],
+        ),
+        content: SizedBox(
+          width: 450,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: editReasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Remarks / Reason',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: editPrescriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Prescriptions (one per line)',
+                    border: OutlineInputBorder(),
+                    helperText: 'e.g. Paracetamol 500mg - 1-0-1',
+                  ),
+                  maxLines: 4,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            onPressed: () async {
+              final success = await api.updateVisit(visit['id'], {
+                'reason': editReasonController.text,
+                'prescription': editPrescriptionController.text,
+              });
+              if (success && ctx.mounted) {
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text(
+              'Save Changes',
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],

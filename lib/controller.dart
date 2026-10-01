@@ -245,8 +245,37 @@ Future<int?> addVisitWithImage({
 
 
 
-Future<void> updateVisit(int visitId, Map<String, dynamic> data) async {
-    final url = Uri.parse('$baseUrl/update_visit/$visitId/'); // Assuming RESTful endpoint
+  Future<void> refreshSelectedPatient() async {
+    if (selectedPatient.value == null) return;
+    final patientId = selectedPatient.value!['id'];
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/patient/$patientId/'));
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body);
+        selectedPatient.value = data;
+        final idx = searchResults.indexWhere((p) => p['id'] == patientId);
+        if (idx != -1) {
+          searchResults[idx] = data;
+          searchResults.refresh();
+        }
+        return;
+      }
+    } catch (_) {}
+
+    try {
+      final query = selectedPatient.value!['name'] ?? '';
+      if (query.isNotEmpty) {
+        await searchPatient(query);
+        final match = searchResults.firstWhereOrNull((p) => p['id'] == patientId);
+        if (match != null) {
+          selectedPatient.value = match;
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<bool> updateVisit(int visitId, Map<String, dynamic> data) async {
+    final url = Uri.parse('$baseUrl/update_visit/$visitId/');
     try {
       final response = await http.put(
         url,
@@ -255,20 +284,71 @@ Future<void> updateVisit(int visitId, Map<String, dynamic> data) async {
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        Get.snackbar('Success', 'Visit updated successfully');
-        // Optionally refresh patient data after update:
-        if (selectedPatient.value != null) {
-          await searchPatient(selectedPatient.value!['name'] ?? '');
-        }
-        await Future.delayed(const Duration(seconds: 1));  // delay here
-  Get.back();
+        Get.snackbar(
+          'Success',
+          'Visit updated successfully',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.shade600,
+          colorText: Colors.white,
+        );
+        await refreshSelectedPatient();
+        return true;
       } else {
-        Get.snackbar('Error', 'Failed to update visit: ${response.body}');
-        await Future.delayed(const Duration(seconds: 1));  // delay here
-  Get.back();
+        Get.snackbar(
+          'Error',
+          'Failed to update visit: ${response.body}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+        );
+        return false;
       }
     } catch (e) {
-      Get.snackbar('Error', 'Exception: $e');
+      Get.snackbar(
+        'Error',
+        'Exception: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> deleteVisit(int visitId) async {
+    final url = Uri.parse('$baseUrl/delete_visit/$visitId/');
+    try {
+      final response = await http.delete(url);
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        Get.snackbar(
+          'Deleted',
+          'Visit deleted successfully',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.shade600,
+          colorText: Colors.white,
+        );
+        await refreshSelectedPatient();
+        return true;
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to delete visit',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade600,
+          colorText: Colors.white,
+        );
+        return false;
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Exception: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade600,
+        colorText: Colors.white,
+      );
+      return false;
     }
   }
 

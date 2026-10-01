@@ -24,15 +24,31 @@ class _EditVisitPageState extends State<EditVisitPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Visit')),
+      appBar: AppBar(
+        title: Text('Edit Visit - ${widget.visitData['visit_date'] ?? ''}'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
               controller: controller.reasonController,
-              decoration: const InputDecoration(labelText: 'Reason'),
-              maxLines: null,
+              decoration: const InputDecoration(
+                labelText: 'Remarks / Reason',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller.prescriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Prescriptions',
+                border: OutlineInputBorder(),
+                helperText: 'One per line, e.g. Paracetamol - 1-0-1',
+              ),
+              maxLines: 4,
             ),
             const SizedBox(height: 20),
             ElevatedButton(
